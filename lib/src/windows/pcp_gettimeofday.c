@@ -41,16 +41,22 @@
 /* custom implementation of the gettimeofday function
  for Windows platform. */
 
+/* llvm-mingw's time.h already defines struct timezone using the standard
+ * Windows SDK sentinel _TIMEZONE_DEFINED.  Guard against the redefinition
+ * so the file compiles with both MSVC-compat and llvm-mingw toolchains. */
+#ifndef _TIMEZONE_DEFINED
+#define _TIMEZONE_DEFINED
 struct timezone {
     int tz_minuteswest; /* minutes W of Greenwich */
     int tz_dsttime;     /* type of dst correction */
 };
+#endif
 
 int gettimeofday(struct timeval *tv, struct timezone *tz) {
     FILETIME ft;
     unsigned __int64 tmpres = 0;
     static int tzflag = 0;
-    int tz_seconds = 0;
+    long tz_seconds = 0;
     int tz_daylight = 0;
 
     if (NULL != tv) {
